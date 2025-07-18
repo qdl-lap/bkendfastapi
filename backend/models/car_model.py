@@ -12,6 +12,7 @@ class CarModel(BaseModel):
     cm3: int = Field(..., gt=0, lt=5000, description="Engine displacement in cubic centimeters")
     km: int = Field(..., gt=0, lt=500000, description="Kilometers driven")
     price: int = Field(..., gt=0, lt=100000, description="Price of the car in currency units")
+    picture_url: Optional[str] = Field(None)
 
     @field_validator("brand")
     @classmethod
@@ -51,12 +52,6 @@ class UpdateCarModel(BaseModel):
 class CarCollection(BaseModel):
     cars: List[CarModel]
 
-# test_car = CarModel(
-#     brand="toyota",
-#     make="corolla",
-#     year=2020,
-#     cm3=1800,
-#     km=30000,
-#     price=20000
-# )
-# print(test_car)
+class CarCollectionPagination(CarCollection):
+    page: int = Field(ge=1, default=1, description="Page number for pagination")
+    has_more: bool
