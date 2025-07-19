@@ -12,6 +12,7 @@ class CarModel(BaseModel):
     cm3: int = Field(..., gt=0, lt=5000, description="Engine displacement in cubic centimeters")
     km: int = Field(..., gt=0, lt=500000, description="Kilometers driven")
     price: int = Field(..., gt=0, lt=100000, description="Price of the car in currency units")
+    user_id: str = Field(..., description="ID of the user who owns the car")
     picture_url: Optional[str] = Field(None)
 
     @field_validator("brand")
@@ -55,3 +56,16 @@ class CarCollection(BaseModel):
 class CarCollectionPagination(CarCollection):
     page: int = Field(ge=1, default=1, description="Page number for pagination")
     has_more: bool
+
+class UserModel(BaseModel):
+    id: Optional[PyObjectId] = Field(alias="_id", default=None)
+    username: str = Field(..., min_length=3, max_length=15)
+    password: str = Field(...)
+
+class LoginModel(BaseModel):
+    username: str = Field(..., min_length=3, max_length=15)
+    password: str = Field(...)
+
+class CurrentUserModel(BaseModel):
+    id: PyObjectId = Field(alias="_id", default=None)
+    username: str = Field(..., min_length=3, max_length=15)

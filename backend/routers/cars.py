@@ -1,22 +1,35 @@
 from fastapi import (
     APIRouter, 
     Body,
+    File,
+    Form,
     Depends,
     HTTPException, 
     Request, 
-    status
+    status,
+    UploadFile
 )
 from fastapi.responses import Response
+from users_auth.authentication import AuthHandler
 from bson import ObjectId
-from models.car_model import CarModel, CarCollectionPagination
+from models.car_model import CarModel, CarCollectionPagination, UpdateCarModel
 from pymongo import ReturnDocument
 import cloudinary
 from cloudinary import uploader
+from config import BaseConfig
 
 
+settings = BaseConfig()
 router = APIRouter()
+auth_handler = AuthHandler()
 
 CARS_PER_PAGE = 10  # Number of cars per page
+
+cloudinary.config(
+    cloud_name=settings.CLOUDINARY_CLOUD_NAME,
+    api_key=settings.CLOUDINARY_API_KEY,
+    api_secret=settings.CLOUDINARY_API_SECRET
+)
 
 @router.post(
     "/",
@@ -25,7 +38,17 @@ CARS_PER_PAGE = 10  # Number of cars per page
     status_code=status.HTTP_201_CREATED,
     response_model_by_alias=False
 )
-async def add_car(request: Request, car: CarModel = Body(...)):
+async def add_car_with_picture(
+    request: Request, 
+    brand: str = Form("brand"),
+    make: str = Form("make"),
+    year: int = Form("year"),
+    cm3: int = Form("cm3"),
+    km: int = Form("km"),
+    price: int = Form("price"),
+    picture: UploadFile = File("picture"),
+    user: str = Depends(auth_handler.auth_wrapper)
+):
     """
     Add a new car to the collection.
     
@@ -36,6 +59,23 @@ async def add_car(request: Request, car: CarModel = Body(...)):
     Returns:
         CarModel: The added car data.
     """
+    cloudinary_image = cloudinary.uploader.upload(
+        picture.file,
+        crop="fill",
+        width=800
+    )
+    picture_url = cloudinary_image["url"]
+
+    car = CarModel(
+        brand=brand,
+        make=make,
+        year=year,
+        cm3=cm3,
+        km=km,
+        price=price,
+        picture_url=picture_url,
+        user_id=user["user_id"]  # Assuming user_id is in the user dict
+    )
     # Here you would typically save the car to a database
     cars = request.app.db["cars"]
     document = car.model_dump(by_alias=True, exclude=["id"])

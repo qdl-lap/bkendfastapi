@@ -8,6 +8,7 @@ class BaseConfig(BaseSettings):
     CLOUDINARY_SECRET_KEY: Optional[str]
     CLOUDINARY_API_KEY: Optional[str]
     CLOUDINARY_CLOUD_NAME: Optional[str]
+    CRYPT_SECRET: Optional[str]
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore"
